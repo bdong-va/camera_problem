@@ -45,6 +45,8 @@ class TestEndpointCaller(unittest.TestCase):
 
     @patch('camera_handler.grequests.map')
     def test_response_returned(self, map_mock):
-        map_mock.return_value= [Mock(text={"camera_id":"id_one",}, status_code=200), None]
+        response_mock = MagicMock(status_code=200)
+        response_mock.json.return_value={"camera_id":"id_one"}
+        map_mock.return_value= [response_mock, None]
         responses = endpoint_caller(["http://www.google.com", "http://facebook.com"])
         self.assertEqual([{'camera_id': 'id_one'}], responses)

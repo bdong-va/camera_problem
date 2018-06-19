@@ -29,6 +29,7 @@ def camera_stats(camera_ids):
         return {}
 
     urls = build_endpoint_url(camera_ids)
+    endpoint_response_cotents = endpoint_caller(urls)
 
     return {}
 
@@ -50,6 +51,19 @@ def endpoint_caller(urls, timeout=30):
     make async call to get response of endpoints.
     timeout: the maxmium timeout we can wait
     exception_handler: the handler we use if status code is not 200 
+
+    return: list of json result. example:
+    {
+        "camera_id": 1,
+        "images": [
+            {
+            "file_size": 42048,
+            },
+            {
+            "file_size": 1024,
+            },
+        ]
+    }
     """
     filtered_urls = urls
     result = []
@@ -69,7 +83,7 @@ def endpoint_caller(urls, timeout=30):
     #     if response.status_code != 200:
     #         # do something here.
 
-    result += [new_response.text for new_response in new_responses if (new_response and new_response.status_code == 200)]
+    result += [new_response.json() for new_response in new_responses if (new_response and new_response.status_code == 200)]
     # # if we have any cache system, add new results into cache system to avoid extra endpoint call
     # for response in new_responses:
     #     memcache.add(response)
@@ -78,3 +92,4 @@ def endpoint_caller(urls, timeout=30):
 def exception_handler(request, exception):
     # put all error handle code here.
     print "Request failed"
+
