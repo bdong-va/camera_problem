@@ -9,10 +9,10 @@ def camera_stats(camera_ids):
     camera_ids: list of string, camera_id.
     Return: json include stats info, example:
     {
-        camera_ids:{
-            "most_data_use": "camera_id_one"
-            "highest_image":"camera_id_two"
-        }
+        "camera_ids":{
+            "most_data_use": "camera_id_one",
+            "highest_image_num":"camera_id_two",
+        },
         "largest_image_list":[
             {
             camera_id: 1,
@@ -29,7 +29,8 @@ def camera_stats(camera_ids):
         return {}
 
     urls = build_endpoint_url(camera_ids)
-    endpoint_response_cotents = endpoint_caller(urls)
+    camera_content_list = endpoint_caller(urls)
+
 
     return {}
 
@@ -88,6 +89,22 @@ def endpoint_caller(urls, timeout=30):
     # for response in new_responses:
     #     memcache.add(response)
     return result
+
+
+def analysis_camera_data(camera_content_list):
+    """
+    camera_content
+    """
+
+    result = {
+        "camera_ids":{
+            "most_data_use": None,
+            "highest_image_num": None,
+        },
+        "largest_image_list":[]
+    }
+    return result
+
 
 def exception_handler(request, exception):
     # put all error handle code here.

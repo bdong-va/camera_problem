@@ -1,6 +1,6 @@
 import unittest
 from mock import patch, Mock, MagicMock
-from camera_handler import camera_stats, build_endpoint_url, endpoint_caller, exception_handler
+from camera_handler import camera_stats, build_endpoint_url, endpoint_caller, exception_handler, analysis_camera_data
 
 class TestCameraHandler(unittest.TestCase):
     def test_return_empty_json_if_camera_ids_are_empty(self):
@@ -50,3 +50,16 @@ class TestEndpointCaller(unittest.TestCase):
         map_mock.return_value= [response_mock, None]
         responses = endpoint_caller(["http://www.google.com", "http://facebook.com"])
         self.assertEqual([{'camera_id': 'id_one'}], responses)
+
+class TestAnalysisCameraData(unittest.TestCase):
+
+    def test_return_empty_result_if_response_is_empty(self):
+        expected= {
+            "camera_ids":{
+                "most_data_use": None,
+                "highest_image_num": None,
+            },
+            "largest_image_list":[]
+        }
+        result = analysis_camera_data([])
+        self.assertEqual(expected, result)
