@@ -1,6 +1,6 @@
 import unittest
 from mock import patch, Mock, MagicMock
-from camera_handler import camera_stats, build_endpoint_url, endpoint_caller, exception_handler, analysis_camera_data
+from camera_handler import camera_stats, build_endpoint_url, endpoint_caller, exception_handler, analysis_camera_data, isValid
 
 class TestCameraHandler(unittest.TestCase):
     def test_return_empty_json_if_camera_ids_are_empty(self):
@@ -52,7 +52,62 @@ class TestEndpointCaller(unittest.TestCase):
         self.assertEqual([{'camera_id': 'id_one'}], responses)
 
 class TestAnalysisCameraData(unittest.TestCase):
-
+    camera_one = {
+        "camera_id": 1,
+        "images": [
+            {
+            "file_size": 42048,
+            },
+            {
+            "file_size": 1024,
+            },
+        ]
+    }
+    camera_two = {
+        "camera_id": 2,
+        "images": [
+            {
+            "file_size": 25000,
+            },
+            {
+            "file_size": 1024,
+            },
+            {
+            "file_size": 1024,
+            },
+            {
+            "file_size": 1024,
+            },
+        ]
+    }
+    camera_three = {
+        "camera_id": 3,
+        "images": [
+            {
+            "file_size": 1024,
+            },
+            {
+            "file_size": 1024,
+            },
+            {
+            "file_size": 1024,
+            },
+        ]
+    }
+    missing_camera_id = {
+         "images": [
+            {
+            "file_size": 1024,
+            },
+            {
+            "file_size": 1024,
+            },
+            {
+            "file_size": 1024,
+            },
+        ]
+    }
+    
     def test_return_empty_result_if_response_is_empty(self):
         expected= {
             "camera_ids":{
@@ -63,3 +118,65 @@ class TestAnalysisCameraData(unittest.TestCase):
         }
         result = analysis_camera_data([])
         self.assertEqual(expected, result)
+
+    def test_skip_bad_data(self):
+        expected= {
+            "camera_ids":{
+                "most_data_use": 1,
+                "highest_image_num": 1,
+            },
+            "largest_image_list":[
+                {
+                "camera_id": 1,
+                "image": {
+                    "file_size": 42048,
+                    },
+                },
+            ]
+        }
+        result = analysis_camera_data([self.camera_one, self.missing_camera_id])
+        self.assertEqual(expected, result)
+
+    def test_good_path(self):
+        expected= {
+            "camera_ids":{
+                "most_data_use": 1,
+                "highest_image_num": 2,
+            },
+            "largest_image_list":[
+                {
+                "camera_id": 1,
+                "image": {
+                    "file_size": 42048,
+                    },
+                },
+                {
+                "camera_id": 2,
+                "image": {
+                    "file_size": 25000,
+                    },
+                },
+                {
+                "camera_id": 3,
+                "image": {
+                    "file_size": 1024,
+                    },
+                },
+            ]
+        }
+        result = analysis_camera_data([self.camera_one, self.camera_two, self.camera_three])
+        self.assertEqual(expected, result)
+
+class TestIsVaild(unittest.TestCase):
+
+    def test_return_false_if_dict_empty(self):
+        self.assertFalse(isValid({}))
+
+    def test_return_false_if_dict_do_not_have_camera_id(self):
+        self.assertFalse(isValid({"images":[]}))
+
+    def test_return_false_if_dict_do_not_have_images(self):
+        self.assertFalse(isValid({"camera_id":1}))
+
+    def test_return_true_for_good_data(self):
+        self.assertTrue(isValid({"camera_id":1, "images":[]}))
