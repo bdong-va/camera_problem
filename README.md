@@ -18,5 +18,6 @@ when image and camera list getting huge, it will have bottleneck on memory.
 
 - use two queue system, **retriever**( include camera_id) and **analyser**( include raw_response_data) 
   - grequest will consume retriever queue, push data to analyser queue (need to modify all helper functions, take reference of two queues instead of taking big list itself)
+  - grequest will push url item back to retriever queue if cannot fetch anything, and +1 on retry times. discard item if retry times over limit.
   - `analysis_camera_data()` will consume analyser queue, update data, and when the queue is empty return result.
   - only have exprience implementing this kind of structure in golang. not sure what we can use in python side. may need a 1 day spike to find out if needed.
