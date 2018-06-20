@@ -39,10 +39,7 @@ def build_endpoint_url(camera_ids):
     if not isinstance(camera_ids, list):
         return []
     
-    urls = []
-    for camera_id in camera_ids:
-        url = "domain.com/camera/{}/".format(camera_id)
-        urls.append(url)
+    urls = [ "domain.com/camera/{}/".format(camera_id) for camera_id in camera_ids]
     return urls
 
 def endpoint_caller(urls, timeout=30):
