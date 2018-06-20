@@ -1,6 +1,6 @@
 import unittest
 from mock import patch, Mock, MagicMock
-from camera_handler import camera_stats, build_endpoint_url, endpoint_caller, exception_handler, analysis_camera_data, isValid
+from camera_handler import camera_stats, build_endpoint_url, fetch_data_async, exception_handler, analysis_camera_data, isValid
 
 class TestCameraHandler(unittest.TestCase):
     def test_return_empty_json_if_camera_ids_are_empty(self):
@@ -31,28 +31,26 @@ class TestBuildEndpointUrl(unittest.TestCase):
         ]
         self.assertEqual(expected, urls)
 
-class TestEndpointCaller(unittest.TestCase):
+class TestFetchDataAsync(unittest.TestCase):
 
     def test_return_empty_list_if_url_list_is_empty(self):
-        responses = endpoint_caller([])
-        self.assertEqual([], responses)
+        responses = fetch_data_async([])
+        result = []
+        for r in responses:
+            result.append(r)
+        self.assertEqual([], result)
 
     @patch('camera_handler.grequests.get')
     def test_url_be_called(self, get_mock):
-        responses = endpoint_caller(["http://www.google.com", "http://facebook.com"])
+        responses = fetch_data_async(["http://www.google.com", "http://facebook.com"])
+        for r in responses:
+            pass
         get_mock.assert_any_call("http://www.google.com", timeout=30)
         get_mock.assert_any_call("http://facebook.com", timeout=30)
 
-    @patch('camera_handler.grequests.map')
-    def test_response_returned(self, map_mock):
-        response_mock = MagicMock(status_code=200)
-        response_mock.json.return_value={"camera_id":"id_one"}
-        map_mock.return_value= [response_mock, None]
-        responses = endpoint_caller(["http://www.google.com", "http://facebook.com"])
-        self.assertEqual([{'camera_id': 'id_one'}], responses)
-
 class TestAnalysisCameraData(unittest.TestCase):
-    camera_one = {
+    camera_one = MagicMock(status_code=200)
+    camera_one.json.return_value={
         "camera_id": 1,
         "images": [
             {
@@ -63,7 +61,8 @@ class TestAnalysisCameraData(unittest.TestCase):
             },
         ]
     }
-    camera_two = {
+    camera_two = MagicMock(status_code=200)
+    camera_two.json.return_value= {
         "camera_id": 2,
         "images": [
             {
@@ -80,7 +79,8 @@ class TestAnalysisCameraData(unittest.TestCase):
             },
         ]
     }
-    camera_three = {
+    camera_three = MagicMock(status_code=200)
+    camera_three.json.return_value= {
         "camera_id": 3,
         "images": [
             {
@@ -94,7 +94,8 @@ class TestAnalysisCameraData(unittest.TestCase):
             },
         ]
     }
-    missing_camera_id = {
+    missing_camera_id = MagicMock(status_code=200)
+    missing_camera_id.json.return_value= {
          "images": [
             {
             "file_size": 1024,

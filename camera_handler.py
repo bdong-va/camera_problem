@@ -29,8 +29,8 @@ def camera_stats(camera_ids):
         return {}
 
     urls = build_endpoint_url(camera_ids)
-    camera_content_list = endpoint_caller(urls)
-    return analysis_camera_data(camera_content_list)
+    camera_content_gen_list = fetch_data_async(urls)
+    return analysis_camera_data(camera_content_gen_list)
 
 def build_endpoint_url(camera_ids):
     """
@@ -42,54 +42,25 @@ def build_endpoint_url(camera_ids):
     urls = [ "domain.com/camera/{}/".format(camera_id) for camera_id in camera_ids]
     return urls
 
-def endpoint_caller(urls, timeout=30):
+def fetch_data_async(urls, timeout=30):
     """
     make async call to get response of endpoints.
     timeout: the maxmium timeout we can wait
     exception_handler: the handler we use if status code is not 200 
 
-    return: list of json result. example:
-    [{
-        "camera_id": 1,
-        "images": [
-            {
-            "file_size": 42048,
-            },
-            {
-            "file_size": 1024,
-            },
-        ]
-    }]
+    return: list of response generators.
     """
     filtered_urls = urls
-    result = []
-    # # if we have any cache system, we will try to get result from cache system first.
-    # for url in urls:
-    #     cache_result = memcache(url)
-    #     if cache_result:
-    #         responses.append(cache_result)
-    #         filtered_urls.remove(url)
 
     rs = (grequests.get(u, timeout=timeout) for u in filtered_urls)
-    new_responses = grequests.map(rs, exception_handler=exception_handler)
-
-    # # do not have real endpoint to test so not sure how to really handle non-200
-    # # but if we need to handle it, we will do it here, like this:
-    # for response in new_responses:
-    #     if response.status_code != 200:
-    #         # do something here.
-
-    result += [new_response.json() for new_response in new_responses if (new_response and new_response.status_code == 200)]
-    # # if we have any cache system, add new results into cache system to avoid extra endpoint call
-    # for response in new_responses:
-    #     memcache.add(response)
-    return result
+    response_gens = grequests.imap(rs, exception_handler=exception_handler)
+    return response_gens
 
 
-def analysis_camera_data(camera_content_list):
+def analysis_camera_data(response_gen_list):
     """
     analysis data and return result
-    camera_content_list: list of json, each json object include one camera's image data
+    response_gen_list: list of response generator, each object include one camera's api response
     return: json result. example:
     {
         "camera_ids":{
@@ -112,7 +83,12 @@ def analysis_camera_data(camera_content_list):
     highest_image_id = None
     highest_image_num = 0
     largest_image_list = []
-    for camera_content in camera_content_list:
+    for response in response_gen_list:
+        # # do not have real endpoint to test so not sure how to really handle non-200
+        # # but if we need to handle it, we will do it here, like:
+        # if response.status_code != 200:
+        #     # do something here.
+        camera_content = response.json() if (response and response.status_code == 200) else None
         if isValid(camera_content):
             camera_id = camera_content.get("camera_id")
             image_list = camera_content.get("images")
