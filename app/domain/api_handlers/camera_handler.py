@@ -1,5 +1,4 @@
 """methods use to fetch camera images and analysis result"""
-
 import grequests
 
 

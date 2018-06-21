@@ -1,6 +1,6 @@
 import unittest
 from mock import patch, Mock, MagicMock
-from camera_handler import camera_stats, build_endpoint_url, fetch_data_async, exception_handler, analysis_camera_data, isValid
+from app.domain.api_handlers.camera_handler import camera_stats, build_endpoint_url, fetch_data_async, exception_handler, analysis_camera_data, isValid
 
 class TestCameraHandler(unittest.TestCase):
     def test_return_empty_json_if_camera_ids_are_empty(self):
@@ -40,7 +40,7 @@ class TestFetchDataAsync(unittest.TestCase):
             result.append(r)
         self.assertEqual([], result)
 
-    @patch('camera_handler.grequests.get')
+    @patch('app.domain.api_handlers.camera_handler.grequests.get')
     def test_url_be_called(self, get_mock):
         responses = fetch_data_async(["http://www.google.com", "http://facebook.com"])
         for r in responses:
